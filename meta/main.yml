@@ -10,5 +10,4 @@ galaxy_info:
         - "2019"
         - "2016"
   license: MIT
-  standalone: true
   min_ansible_version: "2.12"
