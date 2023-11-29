@@ -1,0 +1,14 @@
+all:
+  children:
+    windows_servers:
+      vars:
+        ansible_user: "Administrator@{{ ad_admx_central_store_domain_name }}"
+        ansible_password: "{{ ad_admx_central_store_pw_administrator }}"
+        ansible_connection: "winrm"
+        ansible_winrm_transport: "ntlm"
+        ansible_winrm_server_cert_validation: "ignore"
+      children:
+        primary_domain_controller:
+          hosts:
+            CE01MGMT01:
+              ansible_host: "10.X.X.X"

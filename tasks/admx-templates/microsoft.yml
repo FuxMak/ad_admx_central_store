@@ -1,0 +1,141 @@
+---
+# -------- ADMX Central Store --------
+
+# Query learn.microsoft.com - "Create-and-manage-central-store" and save HTML body
+- name: Query from Microsoft website for latest ADMX templates
+  ansible.builtin.uri:
+    url: "{{ url_admx_microsoft }}"
+    return_content: true
+  register: _result
+  delegate_to: localhost
+
+# Extract latest ADMX download URL from HTML
+- name: Extract href from HTML
+  ansible.builtin.set_fact:
+    _result: "{{ _result | regex_search(regex_admx_redirect, '\\1') }}"
+  delegate_to: localhost
+
+# -- D E B U G --
+- name: Debug - Print the latest ADMX download URL extracted from HTML
+  ansible.builtin.debug:
+    var: _result
+  when: ad_admx_central_store_debug_mode
+
+# Exchange part of download URL to get the redirect URL
+- name: Convert URL to create workaround for redirect
+  ansible.builtin.set_fact:
+    _result: "{{ _result | replace('details', 'confirmation') }}"
+  delegate_to: localhost
+
+# -- D E B U G --
+- name: Debug - Print the extracted redirect link
+  ansible.builtin.debug:
+    var: _result
+  when: ad_admx_central_store_debug_mode
+
+- name: Register HTML body from Microsoft website
+  ansible.builtin.uri:
+    url: "{{ _result[0] }}"
+    return_content: true
+  register: _result
+  delegate_to: localhost
+
+# Extract downloadable MSI from extracted URL
+- name: Extract iframe src from HTML
+  ansible.builtin.set_fact:
+    url_admx_download: "{{ _result | regex_search(regex_admx_download) }}"
+  delegate_to: localhost
+
+- name: Debug - Print the extracted download link
+  ansible.builtin.debug:
+    var: url_admx_download
+  when: ad_admx_central_store_debug_mode
+
+- name: Assign base url and encoded path
+  ansible.builtin.set_fact:
+    url_admx_download: "https://{{ url_admx_download | urlsplit('hostname') }}{{ url_admx_download | urlsplit('path') | urlencode }}"
+  delegate_to: localhost
+
+- name: Debug - Print final ADMX download link
+  ansible.builtin.debug:
+    var: url_admx_download
+  when: ad_admx_central_store_debug_mode
+
+- name: Prerequisite - Create temporary folder for ADMX templates
+  ansible.builtin.file:
+    path: "{{ tmp_dir_admx_templates_ansible }}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+
+# Download and extract latest version of ADMX templates
+- name: Prerequisite - Download ADMX templates
+  ansible.builtin.get_url:
+    url: "{{  url_admx_download }}"
+    dest: "{{ tmp_dir_admx_templates_ansible }}\\{{ installer_admx_templates }}"
+    mode: '0755'
+  delegate_to: localhost
+
+# Create Policy definitions directory on domain controller
+- name: Prerequisite - Create PolicyDefinitions directory on domain controller
+  ansible.windows.win_file:
+    path: "{{ dir_admx_central_store }}"
+    state: directory
+
+- name: Prerequisite - Create installation directory for Group Policies
+  ansible.windows.win_file:
+    path: "{{ tmp_dir_admx_dc }}"
+    state: directory
+
+- name: Prerequisite - Copy latest ADMX files to domain controller
+  ansible.windows.win_copy:
+    src: "{{ tmp_dir_admx_templates_ansible }}\\{{ installer_admx_templates }}"
+    dest: "{{ tmp_dir_admx_dc }}\\{{ installer_admx_templates }}"
+
+# - name: Extract ADMX installer MSI using msiexec
+- name: Run PowerShell script to extract .msi installer file
+  ansible.windows.win_powershell:
+    script: |
+      [CmdletBinding()]
+      param (
+          [String]
+          $path_installer,
+          [String]
+          $path_extracted
+      )
+      msiexec /a $path_installer /qb TARGETDIR=$path_extracted
+
+    parameters:
+      path_installer: "{{ tmp_dir_admx_dc }}\\{{ installer_admx_templates }}"
+      path_extracted: "{{ tmp_dir_admx_dc }}\\ADMX"
+
+- name: Get path of extracted ADMX templates
+  ansible.windows.win_powershell:
+    script: |
+      [CmdletBinding()]
+      param (
+          [String]
+          $root_dir,
+          [String]
+          $search_string
+      )
+      $dir_path = (Get-ChildItem -Recurse $root_dir -Directory -Filter "$search_string").FullName
+
+      if (!$dir_path) {$Ansible.Failed = $true}
+
+      return $dir_path
+    parameters:
+      root_dir: "{{ tmp_dir_admx_dc }}"
+      search_string: "PolicyDefinitions"
+  register: path_policy_definitions
+
+- name: Debug - Get PolicyDefinitions directory
+  ansible.builtin.debug:
+    var: path_policy_definitions.output[0]
+  when: ad_admx_central_store_debug_mode
+
+- name: Copy contents of extracted installer to ADMX central store
+  ansible.windows.win_copy:
+    src: "{{ path_policy_definitions.output[0] }}\\"
+    dest: "{{ dir_admx_central_store }}"
+    remote_src: true

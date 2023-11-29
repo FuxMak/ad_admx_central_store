@@ -1,0 +1,22 @@
+---
+- name: Prerequisite - Create temporary folder for Google Chrome Enterprise bundle
+  ansible.builtin.file:
+    path: "{{ tmp_dir_google_chrome_ansible }}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+
+# Download and extract latest stable version of Google Chrome Enterprise
+- name: Prerequisite - Download Google Chrome Enterprise bundle
+  ansible.builtin.unarchive:
+    src: "{{ url_admx_google_chrome }}"
+    dest: "{{ tmp_dir_google_chrome_ansible }}"
+    mode: '0755'
+    remote_src: true
+  delegate_to: localhost
+
+# -Deploy Google Chrome ADMX templates
+- name: Deployment - Copy Google Chrome ADMX files to central store
+  ansible.windows.win_copy:
+    src: "{{ tmp_dir_google_chrome_ansible }}/windows/admx/"
+    dest: "{{ dir_admx_central_store }}"

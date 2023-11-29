@@ -1,0 +1,42 @@
+---
+# Master playbook for Active Directory ADMX
+
+- name: Dynamically assign ADMX central store location
+  ansible.builtin.set_fact:
+    dir_admx_central_store: "C:\\Windows\\SYSVOL\\sysvol\\{{ ad_admx_central_store_domain_name }}\\Policies\\PolicyDefinitions"
+  when: dir_admx_central_store is undefined
+
+# -------- Download ADMX templates --------
+
+# Microsoft Windows
+- name: Include tasks - Download and extract latest ADMX templates (Windows)
+  ansible.builtin.import_tasks:
+    ./admx-templates/microsoft.yml
+
+# Google Chrome
+- name: Include tasks - Download and extract latest ADMX templates (Google Chrome)
+  ansible.builtin.import_tasks:
+    ./admx-templates/chrome.yml
+  when:
+    "'Google Chrome' in ad_admx_central_store_products"
+
+# -------- Clean up --------
+
+- name: Cleanup - Conditionally remove temporary files (Ansible host)
+  ansible.builtin.file:
+    path: "{{ tmp_dir_admx_ansible }}"
+    state: absent
+  when: ad_admx_central_store_cleanup is true
+  delegate_to: localhost
+
+- name: Cleanup - Conditionally remove ADMX installer (Domain controller)
+  ansible.windows.win_file:
+    path: "{{ tmp_dir_admx_dc }}\\{{ installer_admx_templates }}"
+    state: absent
+  when: ad_admx_central_store_cleanup is true
+
+- name: Cleanup - Conditionally remove temporary files (Domain controller)
+  ansible.windows.win_file:
+    path: "{{ tmp_dir_admx_dc }}\\ADMX"
+    state: absent
+  when: ad_admx_central_store_cleanup is true

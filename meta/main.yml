@@ -1,0 +1,14 @@
+galaxy_info:
+  role_name: ad_admx_central_store
+  author: Marco Fuchs (FuxMak)
+  company: Muehlbauer ID Services GmbH
+  description: Configuration and update of Microsoft Active Domain policy definition (ADMX) central store
+  platforms:
+    - name: Windows
+      versions:
+        - "2022"
+        - "2019"
+        - "2016"
+  license: MIT
+  standalone: true
+  min_ansible_version: "2.12"

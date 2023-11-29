@@ -1,0 +1,22 @@
+---
+# -------- Remote content / URLs --------
+url_admx_microsoft: "https://learn.microsoft.com/en-us/troubleshoot/windows-client/group-policy/create-and-manage-central-store"
+
+url_admx_google_chrome: "https://dl.google.com/dl/edgedl/chrome/policy/policy_templates.zip"
+
+# -------- Directories --------
+
+# Temporary directories on target host
+tmp_dir_admx_dc: "C:\\Windows\\Temp"
+
+# Temporary directories on Ansible node
+tmp_dir_admx_ansible: "/tmp/admx-templates"
+tmp_dir_admx_templates_ansible: "{{ tmp_dir_admx_ansible }}/microsoft"
+tmp_dir_google_chrome_ansible: "{{ tmp_dir_admx_ansible }}/chrome"
+
+# -------- File names --------
+installer_admx_templates: "AdministrativeTemplates.msi"
+
+# -------- Utilities & Regular Expressions --------
+regex_admx_redirect: '<a href="(https://www\.microsoft\.com/download/details\.aspx[^"]*)"'
+regex_admx_download: '([^"]+\.msi)'
