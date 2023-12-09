@@ -11,6 +11,5 @@
         ad_admx_central_store_cleanup: true
         ad_admx_central_store_debug_mode: false
         ad_admx_central_store_domain_name: test.domain.local
-        ad_admx_central_store_pw_administrator: "DomainAdministratorPassword!"
         ad_admx_central_store_products:
           - "Google Chrome"

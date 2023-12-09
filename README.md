@@ -44,7 +44,6 @@ In order to work with this role some variables are *mandatory* to set, while oth
 - ad_admx_central_store_cleanup: Removes installer and extracted files after import
 - ad_admx_central_store_debug_mode: Debug mode for additional (verbose) output
 - ad_admx_central_store_domain_name: Fully qualified domain name (FQDN)
-- ad_admx_central_store_pw_administrator: Domain administrator password
 - ad_admx_central_store_products: List of products, that are supported with automatic downloads
 
 ## Example Playbook
@@ -63,7 +62,6 @@ In order to work with this role some variables are *mandatory* to set, while oth
         ad_admx_central_store_cleanup: true
         ad_admx_central_store_debug_mode: false
         ad_admx_central_store_domain_name: test.domain.local
-        ad_admx_central_store_pw_administrator: "DomainAdministratorPassword!"
         ad_admx_central_store_products:
           - "Google Chrome"
 ```
