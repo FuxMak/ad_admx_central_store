@@ -3,6 +3,7 @@
 url_admx_microsoft: "https://learn.microsoft.com/en-us/troubleshoot/windows-client/group-policy/create-and-manage-central-store"
 
 url_admx_google_chrome: "https://dl.google.com/dl/edgedl/chrome/policy/policy_templates.zip"
+url_admx_google_update: "https://dl.google.com/dl/update2/enterprise/googleupdateadmx.zip"
 
 # -------- Directories --------
 
